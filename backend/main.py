@@ -1,4 +1,5 @@
 import os
+import uvicorn
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
@@ -8,7 +9,7 @@ from PIL import Image
 
 app = FastAPI()
 
-# 設定 CORS：允許所有來源，這在部署到 Cloudflare + Render 時最穩定
+# 設定 CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,7 +25,6 @@ async def remove_background(file: UploadFile = File(...)):
 
     try:
         input_image = await file.read()
-        # 執行去背
         output_image = rembg.remove(input_image)
         return Response(content=output_image, media_type="image/png")
     except Exception as e:
@@ -35,3 +35,8 @@ async def remove_background(file: UploadFile = File(...)):
 @app.get("/")
 def health_check():
     return {"status": "online"}
+
+if __name__ == "__main__":
+    # 重要：確保讀取 Render 的 PORT 環境變數
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
