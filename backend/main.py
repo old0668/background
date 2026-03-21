@@ -1,11 +1,7 @@
 import os
-import uvicorn
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-import rembg
-import io
-from PIL import Image
 
 app = FastAPI()
 
@@ -24,6 +20,8 @@ async def remove_background(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="請上傳圖片檔案")
 
     try:
+        # 延遲載入：只有在真正需要去背時才載入 rembg
+        import rembg
         input_image = await file.read()
         output_image = rembg.remove(input_image)
         return Response(content=output_image, media_type="image/png")
@@ -35,8 +33,3 @@ async def remove_background(file: UploadFile = File(...)):
 @app.get("/")
 def health_check():
     return {"status": "online"}
-
-if __name__ == "__main__":
-    # 重要：確保讀取 Render 的 PORT 環境變數
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
