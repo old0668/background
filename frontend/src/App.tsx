@@ -1,4 +1,4 @@
-import { useState, useCallback, ChangeEvent, DragEvent } from 'react';
+import { useState, type ChangeEvent, type DragEvent } from 'react';
 import './App.css';
 
 function App() {
