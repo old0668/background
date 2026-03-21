@@ -20,10 +20,13 @@ async def remove_background(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="請上傳圖片檔案")
 
     try:
-        # 延遲載入：只有在真正需要去背時才載入 rembg
-        import rembg
+        from rembg import remove, new_session
         input_image = await file.read()
-        output_image = rembg.remove(input_image)
+        
+        # 使用輕量級模型 u2netp (僅約 4MB)，適合記憶體有限的環境
+        session = new_session("u2netp")
+        output_image = remove(input_image, session=session)
+        
         return Response(content=output_image, media_type="image/png")
     except Exception as e:
         print(f"Error: {e}")

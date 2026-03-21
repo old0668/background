@@ -45,8 +45,11 @@ function App() {
     const formData = new FormData();
     formData.append('file', originalFile);
 
-    // 從環境變數讀取後端網址，如果沒有則預設為 localhost:8000
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    // 從環境變數讀取後端網址，移除結尾斜線，預設為 localhost:8000
+    let API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    if (API_URL.endsWith('/')) {
+      API_URL = API_URL.slice(0, -1);
+    }
 
     try {
       const response = await fetch(`${API_URL}/remove-bg`, {
