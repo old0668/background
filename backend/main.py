@@ -21,11 +21,30 @@ async def remove_background(file: UploadFile = File(...)):
 
     try:
         from rembg import remove, new_session
-        input_image = await file.read()
+        from PIL import Image
+        import io
         
-        # 使用輕量級模型 u2netp (僅約 4MB)，適合記憶體有限的環境
+        # 讀取圖片
+        input_data = await file.read()
+        img = Image.open(io.BytesIO(input_data))
+        
+        # 轉換為 RGB (如果是 RGBA 先處理)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+
+        # 縮小圖片解析度以加速運算 (如果長寬超過 1200px)
+        max_size = 1200
+        if max(img.size) > max_size:
+            img.thumbnail((max_size, max_size))
+        
+        # 將縮小後的圖片轉回 bytes
+        temp_buffer = io.BytesIO()
+        img.save(temp_buffer, format="PNG")
+        resized_data = temp_buffer.getvalue()
+
+        # 執行去背 (使用輕量級模型)
         session = new_session("u2netp")
-        output_image = remove(input_image, session=session)
+        output_image = remove(resized_data, session=session)
         
         return Response(content=output_image, media_type="image/png")
     except Exception as e:
